@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import os
 
 # 1. 页面基本配置
-st.set_page_config(page_title="SHEPWM 算法研究成果展示", layout="wide")
+st.set_page_config(page_title="SHEPWM算法研究成果展示", layout="wide")
 
-st.title("🎓 三电平变换器 SHEPWM 算法研究与仿真")
+st.title("🎓三电平变换器SHEPWM算法研究与仿真")
 st.markdown("---")
 
 # 2. 侧边栏：项目核心亮点
@@ -19,13 +19,12 @@ st.sidebar.markdown("---")
 st.sidebar.write("**研究对象**：T型三电平逆变器")
 st.sidebar.write("**核心算法**：多目标粒子群 (MOPSO)")
 
-# --- 第一板块：理论建模 (展现数学功底) ---
+# --- 第一板块：理论建模 ---
 st.header("1. 数学建模与问题定义 (Mathematical Modeling)")
 col_math1, col_math2 = st.columns([1, 1])
 
 with col_math1:
-    st.write("针对三电平变换器，基于傅里叶级数分解建立非线性超越方程组。目标是在极低开关频率下，精准消除 5、7、11、13 次低次谐波，同时保证基波幅值可调。")
-    # 展示 LaTeX 公式，这是算法岗面试的“门面”
+    st.write("针对三电平变换器，基于傅里叶级数分解建立非线性超越方程组。目标是在极低开关频率下，精准消除 5、7、11、13 次低次谐波。")
     st.latex(r'''
     \begin{cases}
     \frac{4}{\pi} \sum_{i=1}^{N} (-1)^{i+1} \cos(\alpha_i) = M \\
@@ -36,14 +35,42 @@ with col_math1:
 with col_math2:
     st.info("""
     **💡 算法挑战与对策**：
-    - **挑战**：方程组具有高度非线性，传统牛顿迭代法对初值极其敏感，易陷入局部最优。
-    - **对策**：引入 **MOPSO (多目标粒子群)** 算法，通过全局寻优获取全调制度范围内的最优开关角解集。
+    - **挑战**：方程组具有高度非线性，对初值极其敏感。
+    - **对策**：引入 **MOPSO** 算法，通过全局寻优获取最优解集。
     """)
 
 st.markdown("---")
 
-# --- 第二板块：系统架构与工具开发 (展现工程能力) ---
-st.header("2. 系统架构与工具开发 (System & Tools)")
+# --- 第二板块：核心算法实现 (新增：代码展示) ---
+st.header("2. 核心算法实现 (Algorithm Snippets)")
+st.write("以下展示了 MATLAB 中针对 SHEPWM 方程组构建的**适应度函数 (Fitness Function)** 核心逻辑，体现了多目标优化的思想：")
+
+# 使用 st.code 展示代码，非常专业
+code_snippet = """
+function fitness = shepwm_obj(alpha, M, n_harmonics)
+    % alpha: 开关角矢量, M: 调制度, n_harmonics: 待消除谐波次数
+    
+    % 1. 计算基波幅值偏差 (Fundamental Deviation)
+    fundamental = (4/pi) * sum((-1).^(1:length(alpha)+1) .* cos(alpha));
+    error_m = abs(fundamental - M);
+
+    % 2. 计算各次谐波幅值总和 (Harmonic Residuals)
+    error_h = 0;
+    for i = 1:length(n_harmonics)
+        h_val = (4/(n_harmonics(i)*pi)) * sum((-1).^(1:length(alpha)+1) .* cos(n_harmonics(i)*alpha));
+        error_h = error_h + abs(h_val);
+    end
+
+    % 3. 综合目标函数 (加权优化)
+    fitness = error_m * 100 + error_h; 
+end
+"""
+st.code(code_snippet, language='matlab')
+
+st.markdown("---")
+
+# --- 第三板块：系统架构与工具开发 ---
+st.header("3. 系统架构与工具开发 (System & Tools)")
 col_img1, col_img2 = st.columns(2)
 
 with col_img1:
@@ -51,29 +78,26 @@ with col_img1:
     if os.path.exists("topo.png"):
         st.image("topo.png", caption="基于 Simulink 搭建的 T 型三电平变换器主电路模型", use_container_width=True)
     else:
-        st.warning("请在 GitHub 上传 topo.png 以展示拓扑结构。")
+        st.warning("请上传 topo.png")
 
 with col_img2:
     st.subheader("B. 自主开发求解工具 (GUI)")
     if os.path.exists("gui.png"):
         st.image("gui.png", caption="基于 MATLAB 开发的 SHEPWM 算法求解与可视化平台", use_container_width=True)
     else:
-        st.warning("请在 GitHub 上传 gui.png 以展示软件界面。")
+        st.warning("请上传 gui.png")
 
 st.markdown("---")
 
-# --- 第三板块：仿真验证与数据量化 (展现严谨性) ---
-st.header("3. 仿真验证与数据量化 (Verification & Data)")
+# --- 第四板块：仿真验证与数据量化 ---
+st.header("4. 仿真验证与数据量化 (Verification & Data)")
 
-# 展示结果图（大图展示，体现视觉冲击力）
 if os.path.exists("result.png"):
-    st.image("result.png", caption="FFT 频谱分析：5/7/11/13 次目标谐波被精准消除，THD 显著优化", use_container_width=True)
-else:
-    st.warning("请在 GitHub 上传 result.png 以展示消谐结果。")
+    st.image("result.png", caption="FFT 频谱分析：目标谐波被精准消除", use_container_width=True)
 
-st.write("下表展示了通过 MOPSO 算法获取的部分最优开关角 $\alpha$（单位：deg）及消谐后性能指标：")
+# 修复乱码：使用 $\alpha$ 代替直接输入字符
+st.write(r"下表展示了通过 MOPSO 算法获取的部分最优开关角 $\alpha$ (单位: deg) 及消谐后性能指标：")
 
-# 真实实验数据表格
 data = {
     "调制度 (M)": [0.2, 0.4, 0.6, 0.8, 0.9],
     "Alpha 1": [38.29, 31.55, 26.44, 24.12, 23.53],
@@ -84,6 +108,5 @@ data = {
 st.table(pd.DataFrame(data))
 
 st.markdown("---")
-# 底部版权与免责声明，体现职业素养
 st.caption("© 孙童舒|控制工程研究生作品集")
-st.write("⚠️ **注**：受知识产权保护，核心算法源代码及底层仿真模型细节不在此公开展示。如需深入交流，请通过简历联系方式垂询。")
+st.write("⚠️ **注**：受知识产权保护，完整源代码及仿真模型细节不在此公开展示。")
