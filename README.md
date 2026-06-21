@@ -3,7 +3,7 @@
 本项目展示了本科优秀毕业论文的核心成果。
 
 ## 🔗 在线演示
-[点击访问在线展示平台](https://sun-shepwm-research.streamlit.app/)
+https://sun-shepwm-research.streamlit.app/
 
 ## 🛠️ 核心贡献
 - **数学建模**：构建了高维非线性超越方程组，实现特定低次谐波消除。
